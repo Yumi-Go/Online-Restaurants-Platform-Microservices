@@ -1,0 +1,44 @@
+syntax = "proto3";
+package restaurant_service;
+
+service RestaurantService {
+  rpc UpdateMenu (UpdateMenuRequest) returns (UpdateMenuResponse);
+  rpc AcceptOrder (AcceptOrderRequest) returns (AcceptOrderResponse);
+  rpc RejectOrder (RejectOrderRequest) returns (RejectOrderResponse);
+}
+
+message UpdateMenuRequest {
+  string restaurant_id = 1;
+  repeated MenuItem items = 2;
+}
+
+message UpdateMenuResponse {
+  string status = 1;
+}
+
+message MenuItem {
+  string item_id = 1;
+  string name = 2;
+  double price = 3;
+  string description = 4;
+}
+
+message AcceptOrderRequest {
+  string restaurant_id = 1;
+  string order_id = 2;
+}
+
+message AcceptOrderResponse {
+  string order_id = 1;
+  string status = 2;
+}
+
+message RejectOrderRequest {
+  string restaurant_id = 1;
+  string order_id = 2;
+}
+
+message RejectOrderResponse {
+  string order_id = 1;
+  string status = 2;
+}

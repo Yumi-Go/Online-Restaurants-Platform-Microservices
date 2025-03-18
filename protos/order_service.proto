@@ -1,0 +1,39 @@
+syntax = "proto3";
+package order_service;
+
+service OrderService {
+  rpc PlaceOrder (PlaceOrderRequest) returns (PlaceOrderResponse);
+  rpc GetOrderStatus (GetOrderStatusRequest) returns (GetOrderStatusResponse);
+  rpc CancelOrder (CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+message PlaceOrderRequest {
+  string customer_id = 1;
+  repeated string items = 2;
+  double total_price = 3;
+}
+
+message PlaceOrderResponse {
+  string order_id = 1;
+  string status = 2;
+}
+
+message GetOrderStatusRequest {
+  string order_id = 1;
+}
+
+message GetOrderStatusResponse {
+  string order_id = 1;
+  string status = 2;
+  repeated string items = 3;
+  double total_price = 4;
+}
+
+message CancelOrderRequest {
+  string order_id = 1;
+}
+
+message CancelOrderResponse {
+  string order_id = 1;
+  string status = 2;
+}
