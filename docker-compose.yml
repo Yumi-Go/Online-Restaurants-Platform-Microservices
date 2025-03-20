@@ -3,14 +3,14 @@
 services:
   redis:
     image: redis:alpine
-#    container_name: redis_server
+    container_name: redis
     ports:
       - "6379:6379"
   order_service:
     build:
       context: ./order_service
       dockerfile: Dockerfile
-#    container_name: order_service
+    container_name: order_service
     ports:
       - "50051:50051"
 
@@ -18,14 +18,24 @@ services:
     build:
       context: ./restaurant_service
       dockerfile: Dockerfile
-#    container_name: restaurant_service
+    container_name: restaurant_service
     ports:
       - "50052:50052"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - "redis"
 
   delivery_service:
     build:
       context: ./delivery_service
       dockerfile: Dockerfile
-#    container_name: delivery_service
+    container_name: delivery_service
     ports:
       - "50053:50053"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - "redis"

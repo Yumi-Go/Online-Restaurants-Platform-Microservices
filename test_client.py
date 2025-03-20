@@ -9,12 +9,9 @@ sys.path.append("order_service")
 sys.path.append("restaurant_service")
 sys.path.append("delivery_service")
 
-from order_service import order_service_pb2
-from order_service import order_service_pb2_grpc
-from restaurant_service import restaurant_service_pb2
-from restaurant_service import restaurant_service_pb2_grpc
-from delivery_service import delivery_service_pb2
-from delivery_service import delivery_service_pb2_grpc
+from order_service import order_service_pb2, order_service_pb2_grpc
+from restaurant_service import restaurant_service_pb2, restaurant_service_pb2_grpc
+from delivery_service import delivery_service_pb2, delivery_service_pb2_grpc
 
 def test_order_service():
     """
@@ -22,24 +19,24 @@ def test_order_service():
     2) Place an order
     3) Get the order status
     """
-    print("----- Testing Order Service -----")
+    print("*** Order Service Test ***")
     channel = grpc.insecure_channel("localhost:50051")
     stub = order_service_pb2_grpc.OrderServiceStub(channel)
 
     # Place an order
     place_req = order_service_pb2.PlaceOrderRequest(
-        customer_id="customer_xyz",
+        customer_id="customer_111",
         items=["burger", "fries"],
-        total_price=15.75
+        total_price=15
     )
     place_res = stub.PlaceOrder(place_req)
-    print("PlaceOrder Response:", place_res)
+    print("[PlaceOrder] Response:", place_res)
 
     # Get order status
     status_req = order_service_pb2.GetOrderStatusRequest(order_id=place_res.order_id)
     status_res = stub.GetOrderStatus(status_req)
-    print("GetOrderStatus Response:", status_res)
-    print()  # blank line
+    print("[GetOrderStatus] Response:", status_res)
+    print()
 
 def test_restaurant_service():
     """
@@ -48,7 +45,7 @@ def test_restaurant_service():
     3) Accept an order
     4) Reject another order
     """
-    print("----- Testing Restaurant Service -----")
+    print("*** Restaurant Service Test ***")
     channel = grpc.insecure_channel("localhost:50052")
     stub = restaurant_service_pb2_grpc.RestaurantServiceStub(channel)
 
@@ -57,38 +54,38 @@ def test_restaurant_service():
         restaurant_id="rest_123",
         items=[
             restaurant_service_pb2.MenuItem(
-                item_id="itemA",
-                name="Veg Pizza",
+                item_id="itemAAA",
+                name="Pizza",
                 price=9.99,
-                description="Delicious vegetarian pizza"
+                description="Cheese pizza"
             ),
             restaurant_service_pb2.MenuItem(
-                item_id="itemB",
-                name="Garlic Bread",
-                price=3.49,
-                description="Crusty garlic bread"
+                item_id="itemBBB",
+                name="Salad",
+                price=5.49,
+                description="Chicken Salad"
             )
         ]
     )
     update_menu_res = stub.UpdateMenu(update_menu_req)
-    print("UpdateMenu Response:", update_menu_res)
+    print("[UpdateMenu] Response:", update_menu_res)
 
     # Accept an order
     accept_req = restaurant_service_pb2.AcceptOrderRequest(
-        restaurant_id="rest_123",
-        order_id="order_1"  # For testing, we'll just pass a dummy order ID
+        restaurant_id="rest_XXX",
+        order_id="order_1"
     )
     accept_res = stub.AcceptOrder(accept_req)
-    print("AcceptOrder Response:", accept_res)
+    print("[AcceptOrder] Response:", accept_res)
 
     # Reject an order
     reject_req = restaurant_service_pb2.RejectOrderRequest(
-        restaurant_id="rest_123",
+        restaurant_id="rest_YYY",
         order_id="order_2"
     )
     reject_res = stub.RejectOrder(reject_req)
-    print("RejectOrder Response:", reject_res)
-    print()  # blank line
+    print("[RejectOrder] Response:", reject_res)
+    print()
 
 def test_delivery_service():
     """
@@ -97,7 +94,7 @@ def test_delivery_service():
     3) Update delivery status
     4) Query driver assignments
     """
-    print("----- Testing Delivery Service -----")
+    print("*** Delivery Service Test ***")
     channel = grpc.insecure_channel("localhost:50053")
     stub = delivery_service_pb2_grpc.DeliveryServiceStub(channel)
 
@@ -125,10 +122,26 @@ def test_delivery_service():
     print("GetDriverAssignments Response:", get_assign_res)
     print()  # blank line
 
+def accept_order_interactive():
+    channel = grpc.insecure_channel("localhost:50052")
+    stub = restaurant_service_pb2_grpc.RestaurantServiceStub(channel)
+
+    rest_id_input = input("Enter restaurant_id: ")
+    order_id_input = input("Enter order_id: ")
+
+    accept_req = restaurant_service_pb2.AcceptOrderRequest(
+        restaurant_id=rest_id_input,
+        order_id=order_id_input
+    )
+    accept_res = stub.AcceptOrder(accept_req)
+    print("AcceptOrder Response:", accept_res)
+
+
 def main():
     test_order_service()
     test_restaurant_service()
     test_delivery_service()
+    accept_order_interactive()
 
 if __name__ == "__main__":
     main()

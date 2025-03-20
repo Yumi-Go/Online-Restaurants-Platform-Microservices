@@ -1,69 +1,82 @@
 import grpc
 from concurrent import futures
+
 import order_service_pb2
 import order_service_pb2_grpc
 
-class OrderServiceServicer(order_service_pb2_grpc.OrderServiceServicer):
+
+"""
+Handles order placement, status retrieval, and cancellation.
+Stores all data in an in-memory dictionary.
+"""
+class OrderServiceHandler(order_service_pb2_grpc.OrderServiceServicer):
     def __init__(self):
-        self.orders = {}  # In-memory dictionary for demonstration
+        # Using a dictionary keyed by order_id
+        self._orders = {}
 
     def PlaceOrder(self, request, context):
-        order_id = f"order_{len(self.orders) + 1}"
-        self.orders[order_id] = {
+        new_id = f"order_{len(self._orders) + 1}"
+        self._orders[new_id] = {
             "customer_id": request.customer_id,
             "items": list(request.items),
             "status": "PLACED",
             "total_price": request.total_price
         }
         return order_service_pb2.PlaceOrderResponse(
-            order_id=order_id,
+            order_id=new_id,
             status="PLACED"
         )
 
     def GetOrderStatus(self, request, context):
-        order_id = request.order_id
-        if order_id in self.orders:
-            order_data = self.orders[order_id]
+        oid = request.order_id
+        if oid in self._orders:
+            details = self._orders[oid]
             return order_service_pb2.GetOrderStatusResponse(
-                order_id=order_id,
-                status=order_data["status"],
-                items=order_data["items"],
-                total_price=order_data["total_price"]
+                order_id=oid,
+                status=details["status"],
+                items=details["items"],
+                total_price=details["total_price"]
             )
+
+        # If the order isn't found, set a gRPC error
         if context is not None:
             context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details("Order not found.")
+            context.set_details("No order found with that ID.")
         return order_service_pb2.GetOrderStatusResponse()
 
     def CancelOrder(self, request, context):
-        order_id = request.order_id
-        if order_id in self.orders:
-            # Simple logic: if it's placed but not accepted, allow cancellation
-            if self.orders[order_id]["status"] == "PLACED":
-                self.orders[order_id]["status"] = "CANCELED"
+        oid = request.order_id
+        if oid in self._orders:
+            current_status = self._orders[oid]["status"]
+            # Only allow cancellation if it hasn't been accepted yet
+            if current_status == "PLACED":
+                self._orders[oid]["status"] = "CANCELED"
                 return order_service_pb2.CancelOrderResponse(
-                    order_id=order_id,
+                    order_id=oid,
                     status="CANCELED"
                 )
             else:
                 return order_service_pb2.CancelOrderResponse(
-                    order_id=order_id,
+                    order_id=oid,
                     status="COULD_NOT_CANCEL"
                 )
+
         context.set_code(grpc.StatusCode.NOT_FOUND)
-        context.set_details("Order not found.")
+        context.set_details("Unable to find the specified order.")
         return order_service_pb2.CancelOrderResponse()
 
-def serve():
+
+def run_order_server():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     order_service_pb2_grpc.add_OrderServiceServicer_to_server(
-        OrderServiceServicer(),
+        OrderServiceHandler(),
         server
     )
     server.add_insecure_port('[::]:50051')
     server.start()
-    print("Order Service running on port 50051...")
+    print("[OrderService] Listening on port 50051...")
     server.wait_for_termination()
 
+
 if __name__ == "__main__":
-    serve()
+    run_order_server()

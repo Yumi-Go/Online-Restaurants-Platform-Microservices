@@ -1,19 +1,15 @@
 import unittest
 import grpc
 from concurrent import futures
-
-# Import gRPC modules generated from .proto
 import delivery_service_pb2
 import delivery_service_pb2_grpc
-
-# Import your actual DeliveryServiceServicer class
-from delivery_server import DeliveryServiceServicer
+from delivery_server import DeliveryServiceHandler
 
 class TestDeliveryService(unittest.TestCase):
     def setUp(self):
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         delivery_service_pb2_grpc.add_DeliveryServiceServicer_to_server(
-            DeliveryServiceServicer(),
+            DeliveryServiceHandler(),
             self.server
         )
         port = self.server.add_insecure_port('localhost:0')
@@ -73,56 +69,3 @@ class TestDeliveryService(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-
-
-
-
-# import grpc
-# import delivery_service_pb2
-# import delivery_service_pb2_grpc
-#
-# def run():
-#     """
-#     Connect to the DeliveryService gRPC server and invoke each RPC.
-#     """
-#
-#     with grpc.insecure_channel('delivery_service:50053') as channel:
-#         stub = delivery_service_pb2_grpc.DeliveryServiceStub(channel)
-#
-#         # 1. Assign a driver to an order
-#         assign_response = stub.AssignDriver(delivery_service_pb2.AssignDriverRequest(
-#             order_id="order_1",
-#             driver_id="driver_abc"
-#         ))
-#         print("=== AssignDriver Response ===")
-#         print(f"Assignment ID: {assign_response.assignment_id}")
-#         print(f"Status       : {assign_response.status}")
-#         print("")
-#
-#         # 2. Update the delivery status
-#         update_response = stub.UpdateDeliveryStatus(delivery_service_pb2.UpdateDeliveryStatusRequest(
-#             order_id="order_1",
-#             status="OUT_FOR_DELIVERY"
-#         ))
-#         print("=== UpdateDeliveryStatus Response ===")
-#         print(f"Order ID: {update_response.order_id}")
-#         print(f"Status  : {update_response.status}")
-#         print("")
-#
-#         # 3. Get all assignments for the driver
-#         assignments_response = stub.GetDriverAssignments(delivery_service_pb2.GetDriverAssignmentsRequest(
-#             driver_id="driver_abc"
-#         ))
-#         print("=== GetDriverAssignments Response ===")
-#         for assignment in assignments_response.assignments:
-#             print(f" - Assignment ID: {assignment.assignment_id}")
-#             print(f"   Order ID     : {assignment.order_id}")
-#             print(f"   Status       : {assignment.status}")
-#             print("")
-#
-# if __name__ == '__main__':
-#     run()
